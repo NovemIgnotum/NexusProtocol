@@ -39,10 +39,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
-      - name: Create failure branch
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push failure branch
         run: |
           FAILURE_BRANCH="failure-$(date +%Y%m%d-%H%M%S)"
           git checkout -b $FAILURE_BRANCH
