@@ -7,25 +7,34 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    outputs:
+      test_status: ${{ steps.tests.outputs.status }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Nécessaire pour les opérations git complexes
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt pytest
+
       - name: Run tests
         id: tests
         run: |
-          pip install -r requirements.txt pytest
-          pytest || echo "::set-output name=status::failure"
+          if pytest; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
 
   handle-failure:
     needs: test
-    if: needs.test.outputs.status == 'failure'
+    if: needs.test.outputs.test_status == 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
