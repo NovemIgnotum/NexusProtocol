@@ -1,55 +1,31 @@
-name: Advanced CI Pipeline
+name: CI Safety Net
 
 on:
   push:
     branches: [dev]
 
 jobs:
-  test-validation:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      tests_passed: ${{ steps.test_results.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Nécessaire pour les opérations git complexes
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Run pytest
-        id: test_results
+      - name: Run tests
+        id: tests
         run: |
           pip install -r requirements.txt pytest
-          pytest || echo "::set-output name=outcome::failure"
-
-  merge-on-success:
-    needs: test-validation
-    if: needs.test-validation.outputs.tests_passed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: Merge dev into main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          git config --global user.name "CI Automerge"
-          git config --global user.email "ci@example.com"
-          git checkout main
-          git pull origin main
-          git merge --no-ff dev -m "Auto-merge: CI passed [skip ci]"
-          git push origin main
+          pytest || echo "::set-output name=status::failure"
 
   handle-failure:
-    needs: test-validation
-    if: needs.test-validation.outputs.tests_passed == 'false'
+    needs: test
+    if: needs.test.outputs.status == 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,11 +34,15 @@ jobs:
           fetch-depth: 0
 
       - name: Create failure branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          FAILURE_BRANCH="failure-$(git rev-parse --short HEAD)"
+          FAILURE_BRANCH="failure-$(date +%Y%m%d-%H%M%S)"
           git checkout -b $FAILURE_BRANCH
           git push origin $FAILURE_BRANCH
           echo "Created failure branch: $FAILURE_BRANCH"
+
+      - name: Revert dev branch
+        run: |
+          git checkout dev
+          git reset --hard HEAD~1
+          git push origin dev --force
+          echo "Dev branch reverted to previous commit"
