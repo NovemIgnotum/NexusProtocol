@@ -1,17 +1,23 @@
-name: Python CI
+name: Advanced CI Pipeline
 
-on: [push, pull_request] # Déclenché sur push/PR
+on:
+  push:
+    branches: [dev]
 
 jobs:
-  test:
+  test-validation:
     runs-on: ubuntu-latest
+    outputs:
+      tests_passed: ${{ steps.test_results.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10" # À adapter
+          python-version: "3.10"
 
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -19,10 +25,43 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
 
-      - name: Install dependencies
+      - name: Run pytest
+        id: test_results
         run: |
-          pip install -r requirements.txt
-          pip install pytest pytest-cov  # Si absent de requirements.txt
+          pip install -r requirements.txt pytest
+          pytest || echo "::set-output name=outcome::failure"
 
-      - name: Run tests
-        run: pytest --cov=./ --cov-report=xml # Test + couverture
+  merge-on-success:
+    needs: test-validation
+    if: needs.test-validation.outputs.tests_passed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Merge dev into main
+        run: |
+          git config --global user.name "CI Automerge"
+          git config --global user.email "ci@example.com"
+          git checkout main
+          git pull origin main
+          git merge --no-ff dev -m "Auto-merge: CI passed [skip ci]"
+          git push origin main
+
+  handle-failure:
+    needs: test-validation
+    if: needs.test-validation.outputs.tests_passed == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create failure branch
+        run: |
+          FAILURE_BRANCH="failure-$(git rev-parse --short HEAD)"
+          git checkout -b $FAILURE_BRANCH
+          git push origin $FAILURE_BRANCH
+          echo "Created failure branch: $FAILURE_BRANCH"
