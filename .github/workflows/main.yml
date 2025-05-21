@@ -50,6 +50,9 @@ jobs:
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/NovemIgnotum/NexusProtocol.git
 
+      - name: Debug remote URL
+        run: git remote -v
+
       - name: Create and push failure branch
         run: |
           FAILURE_BRANCH="failure-$(date +%Y%m%d-%H%M%S)"
