@@ -6,7 +6,7 @@ on:
       - dev
 
 jobs:
-  test:
+  test-and-deploy:
     runs-on: ubuntu-latest
     name: Run Tests and Handle Outcome
 
@@ -28,31 +28,28 @@ jobs:
         id: run_tests
         continue-on-error: true
         run: |
-          pytest > result.log || true
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
-
-      - name: Check test result
-        if: steps.run_tests.outputs.exit_code != '0'
-        run: echo "Tests failed!"
+          pytest || true
+          echo "result=$?" >> $GITHUB_OUTPUT
 
       - name: Create failure branch if tests failed
-        if: steps.run_tests.outputs.exit_code != '0'
+        if: steps.run_tests.outputs.result != '0'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git fetch origin
-          git checkout -b failure
-          git push origin failure
+          branch_name="failure-$(date +'%Y%m%d-%H%M%S')"
+          git checkout -b $branch_name
+          git push origin $branch_name
 
       - name: Revert last commit on dev if tests failed
-        if: steps.run_tests.outputs.exit_code != '0'
+        if: steps.run_tests.outputs.result != '0'
         run: |
           git checkout dev
           git revert --no-edit HEAD
           git push origin dev
 
       - name: Merge dev into main if tests passed
-        if: steps.run_tests.outputs.exit_code == '0'
+        if: steps.run_tests.outputs.result == '0'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
