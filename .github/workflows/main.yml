@@ -32,9 +32,8 @@ jobs:
         id: run_tests
         continue-on-error: true
         run: |
-          result=0
-          pytest --tb=short -q --disable-warnings || result=$?
-          echo "result=$result" >> $GITHUB_OUTPUT
+          pytest --tb=short -q --disable-warnings
+          echo "result=$?" >> $GITHUB_OUTPUT
 
   handle_failure:
     needs: test
