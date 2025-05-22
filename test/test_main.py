@@ -1,8 +1,7 @@
-#def test_true_is_true():
- #   assert True == True
-    
-def failure():
-    assert False
-    # This test will fail, and pytest will report it as such.
-    # You can run this test to see how pytest handles failures.
-    # The failure message will be displayed in the test report.
+def test_true_is_true():
+    assert True == True
+
+def test_hello_world(capsys):
+    print("Hello, le monde")
+    captured = capsys.readouterr()
+    assert captured.out == "Hello, world!\n"
