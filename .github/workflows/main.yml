@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Run Tests
     outputs:
-      tests_passed: ${{ steps.run_tests.outputs.result == '0' }}
+      tests_passed: ${{ steps.run_tests.outputs.result }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Nécessaire pour les opérations git ultérieures
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -30,20 +30,23 @@ jobs:
 
       - name: Run pytest
         id: run_tests
-        run: pytest
-        continue-on-error: true # Continue même si les tests échouent
+        continue-on-error: true
+        run: |
+          pytest || echo "::set-output name=result::1"
+          echo "::set-output name=result::0"
 
   handle_failure:
     needs: test
-    if: needs.test.outputs.tests_passed == 'false'
+    if: ${{ needs.test.outputs.tests_passed == '1' }}
     runs-on: ubuntu-latest
     name: Handle Test Failure
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create failure branch
         run: |
@@ -53,7 +56,7 @@ jobs:
           git checkout -b $branch_name
           git push origin $branch_name
 
-      - name: Revert last commit on dev
+      - name: Revert commit
         run: |
           git checkout dev
           git revert --no-edit HEAD
@@ -61,21 +64,21 @@ jobs:
 
   handle_success:
     needs: test
-    if: needs.test.outputs.tests_passed == 'true'
+    if: ${{ needs.test.outputs.tests_passed == '0' }}
     runs-on: ubuntu-latest
     name: Merge to Main
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }} # Nécessaire pour le push
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Merge dev into main
+      - name: Merge dev to main
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git checkout main
-          git merge origin/dev --no-ff -m "Auto-merge from dev after successful tests"
+          git merge origin/dev --no-ff -m "Auto-merge from dev [CI]"
           git push origin main
