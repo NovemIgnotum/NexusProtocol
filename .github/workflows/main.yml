@@ -33,17 +33,11 @@ jobs:
         continue-on-error: true
         run: |
           pytest --tb=short -q --disable-warnings
-          if [ $? -eq 0 ]; then
-            echo "Tests passed"
-            echo "::set-output name=result::0"
-          else
-            echo "Tests failed"
-            echo "::set-output name=result::1"
-          fi
+          echo "result=$?" >> $GITHUB_OUTPUT
 
   handle_failure:
     needs: test
-    if: ${{ needs.test.outputs.tests_passed == '1' }}
+    if: ${{ needs.test.outputs.tests_passed != '0' }}
     runs-on: ubuntu-latest
     name: Handle Test Failure
 
