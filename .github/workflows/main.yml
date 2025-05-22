@@ -1,4 +1,4 @@
-name: CI Safety Net
+name: Python CI Safety Net
 
 on:
   push:
@@ -6,13 +6,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Version explicite pour éviter les problèmes de runner
+    timeout-minutes: 15 # Évite les blocages infinis
     outputs:
-      test_status: ${{ steps.tests.outputs.status }}
+      test_status: ${{ steps.run_tests.outputs.result }}
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Nécessaire pour les opérations git
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -20,43 +22,39 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt pytest
 
       - name: Run tests
-        id: tests
+        id: run_tests
         run: |
           if pytest; then
-            echo "status=success" >> $GITHUB_OUTPUT
+            echo "result=success" >> $GITHUB_OUTPUT
           else
-            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "result=failure" >> $GITHUB_OUTPUT
           fi
 
-  handle-failure:
+  handle_failure:
     needs: test
     if: needs.test.outputs.test_status == 'failure'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write # Permission explicite pour pousser des branches
+
     steps:
       - uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: create failure branch
+      - name: Create failure branch
         run: |
-          # Configurer Git avec l'identité du bot
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Changer l'URL distante pour utiliser le token personnel
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/NovemIgnotum/NexusProtocol.git
-
-          # Créer et pousser la branche d'échec
           FAILURE_BRANCH="failure-$(date +%Y%m%d-%H%M%S)"
           git checkout -b $FAILURE_BRANCH
           git push origin $FAILURE_BRANCH
           echo "Created failure branch: $FAILURE_BRANCH"
 
-          # Revenir d'un commit sur dev et forcer le push
+      - name: Revert dev branch
+        run: |
           git checkout dev
           git reset --hard HEAD~1
           git push origin dev --force
