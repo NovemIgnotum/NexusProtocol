@@ -41,7 +41,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create and push failure branch, then revert dev
+      - name: create failure branch
         run: |
           # Configurer Git avec l'identité du bot
           git config user.name "github-actions[bot]"
