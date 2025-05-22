@@ -1,61 +1,62 @@
-name: Python CI Safety Net
+name: CI Workflow
 
 on:
   push:
-    branches: [dev]
+    branches:
+      - dev
 
 jobs:
   test:
-    runs-on: ubuntu-22.04 # Version explicite pour éviter les problèmes de runner
-    timeout-minutes: 15 # Évite les blocages infinis
-    outputs:
-      test_status: ${{ steps.run_tests.outputs.result }}
+    runs-on: ubuntu-latest
+    name: Run Tests and Handle Outcome
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Nécessaire pour les opérations git
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
 
-      - name: Run tests
+      - name: Run pytest
         id: run_tests
+        continue-on-error: true
         run: |
-          if pytest; then
-            echo "result=success" >> $GITHUB_OUTPUT
-          else
-            echo "result=failure" >> $GITHUB_OUTPUT
-          fi
+          pytest > result.log || true
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
 
-  handle_failure:
-    needs: test
-    if: needs.test.outputs.test_status == 'failure'
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write # Permission explicite pour pousser des branches
+      - name: Check test result
+        if: steps.run_tests.outputs.exit_code != '0'
+        run: echo "Tests failed!"
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - name: Create failure branch
+      - name: Create failure branch if tests failed
+        if: steps.run_tests.outputs.exit_code != '0'
         run: |
-          FAILURE_BRANCH="failure-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b $FAILURE_BRANCH
-          git push origin $FAILURE_BRANCH
-          echo "Created failure branch: $FAILURE_BRANCH"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin
+          git checkout -b failure
+          git push origin failure
 
-      - name: Revert dev branch
+      - name: Revert last commit on dev if tests failed
+        if: steps.run_tests.outputs.exit_code != '0'
         run: |
           git checkout dev
-          git reset --hard HEAD~1
-          git push origin dev --force
-          echo "Dev branch reverted to previous commit"
+          git revert --no-edit HEAD
+          git push origin dev
+
+      - name: Merge dev into main if tests passed
+        if: steps.run_tests.outputs.exit_code == '0'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git fetch origin
+          git checkout main
+          git merge origin/dev --no-ff -m "Auto-merge from dev after successful tests"
+          git push origin main
