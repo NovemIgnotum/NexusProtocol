@@ -1,8 +1,10 @@
+from termcolor import colored, cprint
+
 class Character:
     RACES = {
-        "humain": {"health": 100, "attack_power": 10, "defense": 5, "speed": 5, "weight_limit" : 20},
-        "elfe": {"health": 5, "attack_power": 8, "defense" : 5, "speed": 10, "weight_limit" : 15},
-        "nain": {"health": 110, "attack_power": 12, "defense": 8, "speed": 3, "weight_limit" : 25},
+        "humain": {"max_health" : 100,"health": 100, "attack_power": 10, "defense": 5, "speed": 5, "weight_limit" : 20},
+        "elfe": {"max_health" : 15, "health": 5, "attack_power": 8, "defense" : 5, "speed": 10, "weight_limit" : 15},
+        "nain": {"max_health" : 120,"health": 110, "attack_power": 12, "defense": 8, "speed": 3, "weight_limit" : 25},
     }
 
     def __init__(self, name, race):
@@ -15,6 +17,7 @@ class Character:
         self.defense = self.RACES[race]["defense"]
         self.speed = self.RACES[race]["speed"]
         self.weight_limit = self.RACES[race]["weight_limit"]
+        self.max_health = self.RACES[race]["max_health"]
         self.inventory = []
 
     def attack(self, other_character):
@@ -42,6 +45,18 @@ class Character:
 
     def defend(self):
         print(f"{self.name} se met en position de défense.")
+    
+    def dipaly_life(self):
+        print("[", end="")
+        life_percent = (self.health / self.max_health) * 100
+        life_cube = "■" * int(life_percent / 5) + " " * int((100-life_percent) / 5)
+
+        if life_percent < 20 : color = "red"
+        elif life_percent < 50 : color = "light_red"
+        else : color = "green"
+
+        cprint(life_cube, color, attrs=["bold"], end="")
+        print("]")
 
 # Exemple d'utilisation :
 # joueur = Character("Baptiste", "elfe")
