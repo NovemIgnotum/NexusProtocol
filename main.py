@@ -1,29 +1,11 @@
 from game import player
-from termcolor import colored, cprint
+from game import utils
 
-
-def display_game_name() :
-    cprint("###############################################################", "red", attrs=["bold"])
-    cprint("#                                                             #","red", attrs=["bold"])
-    cprint("#" , "red", end="", attrs=["bold"])
-    cprint("  ###   ####  ########   ###   ###  ###     ###   ########   ", "red", end="")
-    cprint("#" , "red", attrs=["bold"])
-    cprint("#" , "red", end="", attrs=["bold"])
-    cprint("  ###  #####  ##          ### ###   ###     ###   #          ", "blue", end="" )
-    cprint("#" , "red", attrs=["bold"])
-    cprint("#" , "red", end="", attrs=["bold"])
-    cprint("  ### ## ###  ########      ###     ###     ###   ########   ", "green", end="")
-    cprint("#" , "red", attrs=["bold"])
-    cprint("#" , "red", end="", attrs=["bold"])
-    cprint("  #####  ###  ##         ###  ###   ###     ###          #   ", "magenta", end="")
-    cprint("#" , "red", attrs=["bold"])
-    cprint("#" , "red", end="", attrs=["bold"])
-    cprint("  ###    ###  ########  ###    ###     #####      ########   ", "cyan", end="")
-    cprint("#" , "red", attrs=["bold"])
-    cprint("#                                                             #","red", attrs=["bold"])
-    cprint("###############################################################","red", attrs=["bold"])
 
 if __name__ == "__main__":
     player1 = player.Character("Nicolas", "elfe")
-    player1.dipaly_life()
+    utils.Utils.display_game_name()
+    utils.Utils.display_welcome()
+    utils.Utils.login_choice()
+    utils.Utils.dipaly_life(player1)
     
