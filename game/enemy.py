@@ -62,3 +62,4 @@ class Enemies:
         print(f"{self.name}: {self.description}")
         print(f"Vie: {self.health}, Attaque: {self.attack_power}, Défense: {self.defense}, Vitesse: {self.speed}")
     
+    
