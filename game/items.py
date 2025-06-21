@@ -1,33 +1,26 @@
-class Items: 
-    ITEMS = {
-        "Épée en bois": {
-            "description": "Une épée en bois, pas très efficace mais légère.",
-            "damage": 5,
-            "weight": 1,
-        },
-        "bouclier en bois": {
-            "description": "Un bouclier en bois, léger mais fragile.",
-            "defense": 3,
-            "weight": 2,
-        },
-        "Potion de soin": {
-            "description": "Une potion qui restaure 20 points de vie.",
-            "heal": 20,
-            "weight": 0.5,
-        },
-        "Armure en cuir": {
-            "description": "Une armure légère en cuir, offrant une protection de base.",
-            "defense": 5,
-            "weight": 3,
-        },
-        "Arc en bois": {
-            "description": "Un arc en bois, idéal pour les attaques à distance.",
-            "damage": 7,
-            "weight": 1.5,
-        },
-        "Flèche en fer": {
-            "description": "Une flèche en fer, parfaite pour l'arc.",
-            "damage": 3,
-            "weight": 0.1,
-        },
-    }
+import random
+
+class Items:
+    def __init__(self, name, damage, dice):
+        self.name = name
+        self.damage = damage
+        self.dice = dice
+
+        rarity_number = random.randint(1, 100)
+        
+        # Mythic : add one dice and multiply damage by 5
+        # Legendary : Multiply damage by 3
+        # Rare : Multiply damage by 2
+        # Common : Do nothing
+        if rarity_number > 95 : 
+            self.rarity = "Mythic"
+            self.damage = self.damage * 5
+            self.dice = self.dice + 1
+        elif rarity_number > 75 :
+            self.rarity = "Legendary"
+            self.damage = self.damage * 3
+        elif rarity_number > 40 :
+            self.rarity = "Rare"
+            self.damage = self.damage * 2
+        else :
+            self.rarity = "Common"
