@@ -59,3 +59,15 @@ class Utils :
 
         cprint(life_cube, color, attrs=["bold"], end="")
         print(f"] {p.health} / {p.max_health}")
+
+    def display_classes_choices() -> str :
+        print("Qu'elle classe voulez-vous jouer ?")
+        print("1. Magicien")
+        print("2. Voleur")
+        print("3. Combattant")
+
+        classes = int(input())
+        
+        if classes == 1 : return "Magicien"
+        elif classes == 2 : return "Voleur"
+        else : return "Combattant"

@@ -1,23 +1,23 @@
 from termcolor import colored, cprint
 
 class Character:
-    RACES = {
-        "humain": {"max_health" : 100,"health": 100, "attack_power": 10, "defense": 5, "speed": 5, "weight_limit" : 20},
-        "elfe": {"max_health" : 15, "health": 5, "attack_power": 8, "defense" : 5, "speed": 10, "weight_limit" : 15},
-        "nain": {"max_health" : 120,"health": 110, "attack_power": 12, "defense": 8, "speed": 3, "weight_limit" : 25},
+    CLASSES = {
+        "Magicien": {"max_health" : 75,"health": 75, "attack_power": 10, "defense": 5, "speed": 5, "weight_limit" : 20},
+        "Voleur": {"max_health" : 80, "health": 80, "attack_power": 8, "defense" : 5, "speed": 10, "weight_limit" : 15},
+        "Guerrier": {"max_health" : 100,"health": 100, "attack_power": 10, "defense": 8, "speed": 3, "weight_limit" : 25},
     }
 
-    def __init__(self, name, race):
-        if race not in self.RACES:
-            raise ValueError(f"Race inconnue: {race}")
+    def __init__(self, name, classe):
+        if classe not in self.CLASSES:
+            raise ValueError(f"Classe inconnue: {classe}")
         self.name = name
-        self.race = race
-        self.health = self.RACES[race]["health"]
-        self.attack_power = self.RACES[race]["attack_power"]
-        self.defense = self.RACES[race]["defense"]
-        self.speed = self.RACES[race]["speed"]
-        self.weight_limit = self.RACES[race]["weight_limit"]
-        self.max_health = self.RACES[race]["max_health"]
+        self.race = classe
+        self.health = self.CLASSES[classe]["health"]
+        self.attack_power = self.CLASSES[classe]["attack_power"]
+        self.defense = self.CLASSES[classe]["defense"]
+        self.speed = self.CLASSES[classe]["speed"]
+        self.weight_limit = self.CLASSES[classe]["weight_limit"]
+        self.max_health = self.CLASSES[classe]["max_health"]
         self.inventory = []
 
     def attack(self, other_character):
