@@ -22,8 +22,8 @@ class Character:
 
     def attack(self, other_character):
         other_character.health -= self.attack_power
-        print(f"{self.name} attaque {other_character.name} pour {self.attack_power} dégâts !")
-        print(f"La santé de {other_character.name} est maintenant {other_character.health}.")
+        print(f"{self.name} lance une attaque sur {other_character.name} et lui inflige {self.attack_power} dégâts !")
+        other_character.display_life()
 
     def add_item(self, item):
         self.inventory.append(item)
@@ -46,7 +46,7 @@ class Character:
     def defend(self):
         print(f"{self.name} se met en position de défense.")
     
-    def dipaly_life(self):
+    def display_life(self):
         print("[", end="")
         life_percent = (self.health / self.max_health) * 100
         life_cube = "■" * int(life_percent / 5) + " " * int((100-life_percent) / 5)

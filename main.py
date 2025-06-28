@@ -12,9 +12,13 @@ if __name__ == "__main__":
     classe_name = utils.Utils.display_classes_choices()
     player_name = utils.Utils.display_name_choice()
 
-    plr = player.Character(player_name, classe_name)
-
+    plr1 = player.Character(player_name, classe_name)
+    plr2 = player.Character("Lou-anne", "Magicien")
     utils.Utils.display_intersection()
+
+    plr2.display_life()
+
+    plr1.attack(plr2)
 
     # Game loop
 
